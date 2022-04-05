@@ -52,7 +52,6 @@ def minimax_max_node(board, color, limit, caching = 0): #returns highest possibl
 		# Note: the MIN player is defined by color, and the MAX player is the player we are finding a move for
     value = -math.inf
     best_move = None
-    opp_color = 2 if color == 1 else 1
     moves = get_possible_moves(board, color)
     
     if moves == [] or limit == 0:
@@ -83,15 +82,44 @@ def select_move_minimax(board, color, limit, caching = 0):
 
 ############ ALPHA-BETA PRUNING #####################
 def alphabeta_min_node(board, color, alpha, beta, limit, caching = 0, ordering = 0):
-		#IMPLEMENT (and replace the line below)
-		return ((0,0),0) #change this!
+    value = math.inf
+    best_move = None
+    opp_color = 2 if color == 1 else 1
+    moves = get_possible_moves(board, opp_color)
+    
+    if moves == [] or limit == 0:
+        return (best_move, compute_utility(board, color))
+
+    for move in moves:
+        next_board = play_move(board, opp_color, *move)
+        utility = alphabeta_max_node(next_board, color, alpha, beta, limit-1, caching, ordering)[1]
+        if utility < value:
+          best_move = move
+          value = utility
+        beta = min(beta, value)
+        if beta <= alpha: return best_move, value
+    return (best_move, value)
 
 def alphabeta_max_node(board, color, alpha, beta, limit, caching = 0, ordering = 0):
-		#IMPLEMENT (and replace the line below)
-		return ((0,0),0) #change this!
+    value = -math.inf
+    best_move = None
+    moves = get_possible_moves(board, color)
+    
+    if moves == [] or limit == 0:
+        return (best_move, compute_utility(board, color))
+
+    for move in moves:
+        next_board = play_move(board, color, *move)
+        utility = alphabeta_min_node(next_board, color, alpha, beta, limit-1, caching, ordering)[1]
+        if utility > value:
+          best_move = move
+          value = utility
+        alpha = max(alpha, value)
+        if alpha >= beta: return best_move, value
+    return (best_move, value)
 
 def select_move_alphabeta(board, color, limit, caching = 0, ordering = 0):
-		"""
+    """
 		Given a board and a player color, decide on a move. 
 		The return value is a tuple of integers (i,j), where
 		i is the column and j is the row on the board.  
@@ -105,8 +133,8 @@ def select_move_alphabeta(board, color, limit, caching = 0, ordering = 0):
 		If ordering is ON (i.e. 1), use node ordering to expedite pruning and reduce the number of state evaluations. 
 		If ordering is OFF (i.e. 0), do NOT use node ordering to expedite pruning and reduce the number of state evaluations. 
 		"""
-		#IMPLEMENT (and replace the line below)
-		return (0,0) #change this!
+    # initialize alpha to -inf, beta to inf
+    return alphabeta_max_node(board, color, -math.inf, math.inf, limit, caching, ordering)[0]
 
 ####################################################
 def run_ai():
