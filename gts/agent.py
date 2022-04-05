@@ -29,16 +29,25 @@ def compute_heuristic(board, color): #not implemented, optional
 def opp_color(color):
   return 2 if color == 1 else 1
 
+min_dict = dict()
+max_dict = dict()
+
 ############ MINIMAX ###############################
 def minimax_min_node(board, color, limit, caching = 0): #returns lowest possibly utility
     # Note: the MAX player is defined by color, and the MIN player is the player we are finding a move for
+    if caching:
+        if (board, color) in min_dict: return min_dict[(board, color)]
+
     value = math.inf
     best_move = None
     opp_color = 2 if color == 1 else 1
     moves = get_possible_moves(board, opp_color)
     
     if moves == [] or limit == 0:
-        return (best_move, compute_utility(board, color))
+        result = (best_move, compute_utility(board, color))
+        if caching:
+            min_dict[(board, color)] = result
+        return result
 
     for move in moves:
         next_board = play_move(board, opp_color, *move)
@@ -46,16 +55,26 @@ def minimax_min_node(board, color, limit, caching = 0): #returns lowest possibly
         if utility < value:
           best_move = move
           value = utility
+
+    if caching:
+        min_dict[(board, color)] = (best_move, value)
+
     return (best_move, value)
 
 def minimax_max_node(board, color, limit, caching = 0): #returns highest possible utility
 		# Note: the MIN player is defined by color, and the MAX player is the player we are finding a move for
+    if caching:
+        if (board, color) in max_dict: return max_dict[(board, color)]
+
     value = -math.inf
     best_move = None
     moves = get_possible_moves(board, color)
     
     if moves == [] or limit == 0:
-        return (best_move, compute_utility(board, color))
+        result = (best_move, compute_utility(board, color))
+        if caching:
+            max_dict[(board, color)] = result
+        return result
 
     for move in moves:
         next_board = play_move(board, color, *move)
@@ -63,6 +82,10 @@ def minimax_max_node(board, color, limit, caching = 0): #returns highest possibl
         if utility > value:
           best_move = move
           value = utility
+
+    if caching:
+      max_dict[(board, color)] = (best_move, value)
+
     return (best_move, value)
 
 def select_move_minimax(board, color, limit, caching = 0):
@@ -82,13 +105,19 @@ def select_move_minimax(board, color, limit, caching = 0):
 
 ############ ALPHA-BETA PRUNING #####################
 def alphabeta_min_node(board, color, alpha, beta, limit, caching = 0, ordering = 0):
+    if caching:
+        if (board, color) in min_dict: return min_dict[(board, color)]
+
     value = math.inf
     best_move = None
     opp_color = 2 if color == 1 else 1
     moves = get_possible_moves(board, opp_color)
     
     if moves == [] or limit == 0:
-        return (best_move, compute_utility(board, color))
+        result = (best_move, compute_utility(board, color))
+        if caching:
+            min_dict[(board, color)] = result
+        return result
 
     for move in moves:
         next_board = play_move(board, opp_color, *move)
@@ -98,15 +127,25 @@ def alphabeta_min_node(board, color, alpha, beta, limit, caching = 0, ordering =
           value = utility
         beta = min(beta, value)
         if beta <= alpha: return best_move, value
+
+    if caching:
+        min_dict[(board, color)] = (best_move, value)
+
     return (best_move, value)
 
 def alphabeta_max_node(board, color, alpha, beta, limit, caching = 0, ordering = 0):
+    if caching:
+        if (board, color) in max_dict: return max_dict[(board, color)]
+
     value = -math.inf
     best_move = None
     moves = get_possible_moves(board, color)
     
     if moves == [] or limit == 0:
-        return (best_move, compute_utility(board, color))
+        result = (best_move, compute_utility(board, color))
+        if caching:
+            max_dict[(board, color)] = result
+        return result
 
     for move in moves:
         next_board = play_move(board, color, *move)
@@ -116,6 +155,10 @@ def alphabeta_max_node(board, color, alpha, beta, limit, caching = 0, ordering =
           value = utility
         alpha = max(alpha, value)
         if alpha >= beta: return best_move, value
+
+    if caching:
+      max_dict[(board, color)] = (best_move, value)
+
     return (best_move, value)
 
 def select_move_alphabeta(board, color, limit, caching = 0, ordering = 0):
