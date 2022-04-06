@@ -80,10 +80,10 @@ def compute_heuristic(board, color): #not implemented, optional
     pre_score = compute_utility(board, color)
     corner_count = count_corners(board, color)
     x_pos = x_positions(board, color)
-    return pre_score + corner_count
+    return pre_score + corner_count + x_pos
 
 def opp_color(color):
-  return 2 if color == 1 else 1
+    return 2 if color == 1 else 1
 
 min_dict = dict()
 max_dict = dict()
@@ -174,9 +174,9 @@ def alphabeta_min_node(board, color, alpha, beta, limit, caching = 0, ordering =
         if caching:
             min_dict[(board, color)] = result
         return result
-
+    
     for move in moves:
-        next_board = play_move(board, color, *move)
+        next_board = play_move(board, opp_color, *move)
         utility = alphabeta_max_node(next_board, color, alpha, beta, limit-1, caching, ordering)[1]
         if utility < value:
           best_move = move
@@ -203,14 +203,15 @@ def alphabeta_max_node(board, color, alpha, beta, limit, caching = 0, ordering =
             max_dict[(board, color)] = result
         return result
 
-    succ_states = []
+    next_boards = []
     for move in moves:
-      succ_states.append(play_move(board, color, *move))
+        next_board = play_move(board, color, *move)
+        next_boards.append((next_board, move))
 
     if ordering:
-        succ_states.sort(key = lambda iter_board: compute_utility(iter_board, color), reverse = True)
+        next_boards.sort(key=lambda board: compute_utility(board[0], color), reverse=True)
 
-    for next_board in succ_states:
+    for (next_board, move) in next_boards:
         utility = alphabeta_min_node(next_board, color, alpha, beta, limit-1, caching, ordering)[1]
         if utility > value:
           best_move = move
