@@ -2,6 +2,7 @@
 An AI player for Othello. 
 """
 
+from itertools import count
 import random
 import sys
 import time
@@ -21,10 +22,65 @@ def compute_utility(board, color):
 		elif (color == 2):
 				return white - black
 
+def count_corners(board, color, weight=3):
+    count = 0
+    length = len(board[0])
+    op_color = opp_color(color)
+    # top left, top right, bottom left, bottom right
+    if (board[0][0] == color):
+      count += weight
+    elif (board[0][0] == op_color):
+      count -= weight
+    if (board[0][length-1] == color):
+      count += weight
+    elif (board[0][length-1] == op_color):
+      count -= weight
+    if (board[length-1][0] == color):
+      count += weight
+    elif (board[length-1][0] == op_color):
+      count -= weight
+    if (board[length-1][length-1] == color):
+      count += weight
+    elif (board[length-1][length-1] == op_color):
+      count -= weight
+    return count
+
+def count_total(board):
+    black, white = get_score(board)
+    return black + white
+
+def x_positions(board, color, weight=4):
+    length = len(board[0])
+    op_color = opp_color(color)
+    count = 0
+    total_moves = count_total(board)
+    threshold = length * length * 0.6875
+    # top left, top right, bottom left, bottom right
+    if (total_moves <= threshold):
+        if (board[1][1] == color):
+            count -= weight
+        elif (board[1][1] == op_color):
+            count += weight
+        if (board[1][length-2] == color):
+            count -= weight
+        elif (board[1][length-2] == op_color):
+            count += weight
+        if (board[length-2][1] == color):
+            count -= weight
+        elif (board[length-2][1] == op_color):
+            count += weight
+        if (board[length-2][length-2] == color):
+            count -= weight
+        elif (board[length-2][length-2] == op_color):
+            count += weight
+    return count
+
 # Better heuristic value of board
 def compute_heuristic(board, color): #not implemented, optional
-    #IMPLEMENT
-    return 0 #change this!
+    pre_score = compute_utility(board, color)
+    corner_count = count_corners(board, color)
+    x_pos = x_positions(board, color)
+    return pre_score + corner_count
 
 def opp_color(color):
   return 2 if color == 1 else 1
@@ -118,9 +174,9 @@ def alphabeta_min_node(board, color, alpha, beta, limit, caching = 0, ordering =
         if caching:
             min_dict[(board, color)] = result
         return result
-    
+
     for move in moves:
-        next_board = play_move(board, opp_color, *move)
+        next_board = play_move(board, color, *move)
         utility = alphabeta_max_node(next_board, color, alpha, beta, limit-1, caching, ordering)[1]
         if utility < value:
           best_move = move
@@ -147,15 +203,14 @@ def alphabeta_max_node(board, color, alpha, beta, limit, caching = 0, ordering =
             max_dict[(board, color)] = result
         return result
 
-    next_boards = []
+    succ_states = []
     for move in moves:
-        next_board = play_move(board, color, *move)
-        next_boards.append((next_board, move))
+      succ_states.append(play_move(board, color, *move))
 
     if ordering:
-        next_boards.sort(key=lambda board: compute_utility(board[0], color), reverse=True)
+        succ_states.sort(key = lambda iter_board: compute_utility(iter_board, color), reverse = True)
 
-    for (next_board, move) in next_boards:
+    for next_board in succ_states:
         utility = alphabeta_min_node(next_board, color, alpha, beta, limit-1, caching, ordering)[1]
         if utility > value:
           best_move = move
