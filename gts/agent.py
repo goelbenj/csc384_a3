@@ -118,7 +118,7 @@ def alphabeta_min_node(board, color, alpha, beta, limit, caching = 0, ordering =
         if caching:
             min_dict[(board, color)] = result
         return result
-
+    
     for move in moves:
         next_board = play_move(board, opp_color, *move)
         utility = alphabeta_max_node(next_board, color, alpha, beta, limit-1, caching, ordering)[1]
@@ -147,8 +147,15 @@ def alphabeta_max_node(board, color, alpha, beta, limit, caching = 0, ordering =
             max_dict[(board, color)] = result
         return result
 
+    next_boards = []
     for move in moves:
         next_board = play_move(board, color, *move)
+        next_boards.append((next_board, move))
+
+    if ordering:
+        next_boards.sort(key=lambda board: compute_utility(board[0], color), reverse=True)
+
+    for (next_board, move) in next_boards:
         utility = alphabeta_min_node(next_board, color, alpha, beta, limit-1, caching, ordering)[1]
         if utility > value:
           best_move = move
