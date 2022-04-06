@@ -2,6 +2,7 @@
 An AI player for Othello. 
 """
 
+from itertools import count
 import random
 import sys
 import time
@@ -21,10 +22,65 @@ def compute_utility(board, color):
 		elif (color == 2):
 				return white - black
 
+def count_corners(board, color, weight=3):
+    count = 0
+    length = len(board[0])
+    op_color = opp_color(color)
+    # top left, top right, bottom left, bottom right
+    if (board[0][0] == color):
+      count += weight
+    elif (board[0][0] == op_color):
+      count -= weight
+    if (board[0][length-1] == color):
+      count += weight
+    elif (board[0][length-1] == op_color):
+      count -= weight
+    if (board[length-1][0] == color):
+      count += weight
+    elif (board[length-1][0] == op_color):
+      count -= weight
+    if (board[length-1][length-1] == color):
+      count += weight
+    elif (board[length-1][length-1] == op_color):
+      count -= weight
+    return count
+
+def count_total(board):
+    black, white = get_score(board)
+    return black + white
+
+def x_positions(board, color, weight=4):
+    length = len(board[0])
+    op_color = opp_color(color)
+    count = 0
+    total_moves = count_total(board)
+    threshold = length * length * 0.6875
+    # top left, top right, bottom left, bottom right
+    if (total_moves <= threshold):
+        if (board[1][1] == color):
+            count -= weight
+        elif (board[1][1] == op_color):
+            count += weight
+        if (board[1][length-2] == color):
+            count -= weight
+        elif (board[1][length-2] == op_color):
+            count += weight
+        if (board[length-2][1] == color):
+            count -= weight
+        elif (board[length-2][1] == op_color):
+            count += weight
+        if (board[length-2][length-2] == color):
+            count -= weight
+        elif (board[length-2][length-2] == op_color):
+            count += weight
+    return count
+
 # Better heuristic value of board
 def compute_heuristic(board, color): #not implemented, optional
-    #IMPLEMENT
-    return 0 #change this!
+    pre_score = compute_utility(board, color)
+    corner_count = count_corners(board, color)
+    x_pos = x_positions(board, color)
+    return pre_score + corner_count
 
 def opp_color(color):
   return 2 if color == 1 else 1
